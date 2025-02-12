@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+
+    <!-- Adapter Specific sections -->
+    <Catch2Adapter>
+        <FilenameFilter>^tests-*</FilenameFilter><!-- Regex filter -->
+        <WorkingDirectory>.\buid\bin</WorkingDirectory>
+        <WorkingDirectoryRoot>Executable</WorkingDirectoryRoot>
+    </Catch2Adapter>
+
+</RunSettings>

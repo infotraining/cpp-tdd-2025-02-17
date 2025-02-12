@@ -1,0 +1,9 @@
+{
+    "dependencies": [
+        "catch2",
+        "gtest",
+        "bext-di",
+        "cereal",
+        "trompeloeil"
+    ]
+}
