@@ -29,5 +29,6 @@ include(Catch)
 add_executable(${PROJECT_TESTS} ${SRC_LIST} ${HEADERS_LIST})
 
 target_link_libraries(${PROJECT_TESTS} PRIVATE Catch2::Catch2WithMain ${PROJECT_LIB})
+target_compile_features(${PROJECT_TESTS} PUBLIC cxx_std_20)
 
 catch_discover_tests(${PROJECT_TESTS})
