@@ -1,3 +1,4 @@
+
 #include <algorithm>
 #include <string>
 #include <memory>
@@ -9,7 +10,18 @@
 
 using namespace std;
 
-TEST(Example, ExampleTest)
+class BowlingGame
 {
-    EXPECT_EQ(1, 1);
+public:
+    size_t score() const
+    {
+        return 0;
+    }
+};
+
+TEST(BowlingGameTests, When_GameStarts_ScoreIsZero)
+{
+    BowlingGame game;
+
+    ASSERT_EQ(game.score(), 0);
 }
