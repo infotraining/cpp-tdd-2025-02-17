@@ -15,6 +15,7 @@ file(GLOB SRC_HEADERS *.h *.hpp *.hxx)
 add_executable(${PROJECT_TESTS} ${SRC_FILES} ${SRC_HEADERS})
 
 target_link_libraries(${PROJECT_TESTS} ${PROJECT_LIB} GTest::gmock_main)
+target_compile_features(${PROJECT_TESTS} PUBLIC cxx_std_20)
 
 include(CTest)
 include(GoogleTest)

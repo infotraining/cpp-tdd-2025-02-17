@@ -19,14 +19,17 @@ public:
     {
         size_t sum{};
 
-        for(int frame_index = 0, i = 0; frame_index < 10; i += 2, ++frame_index)
+        for(int frame_index = 0, i = 0; frame_index < 10; ++frame_index)
         {
+            auto [current_frame_score, frame_size] = frame_score(i);
+            sum += current_frame_score;
+
             if (is_strike(i) )
                 sum += strike_bonus(i);
             else if (is_spare(i))
                 sum += spare_bonus(i);
                 
-            sum+= frame_score(i);
+            i += frame_size;
         }
 
         return sum;
@@ -41,8 +44,6 @@ public:
 
         m_rolls[m_roll_index] = pins;
         ++m_roll_index;
-
-        make_padding_if_strike(pins);        
     }
 
     constexpr static size_t number_of_pins_in_frame = 10;
@@ -51,14 +52,12 @@ private:
     size_t m_roll_index{};
     std::array<size_t, 22> m_rolls{};
 
-    void make_padding_if_strike(size_t pins)
+    std::tuple<size_t, size_t> frame_score(size_t roll_index) const
     {
-        if (m_roll_index >= 20) return;
+        if (is_strike(roll_index))
+            return {number_of_pins_in_frame, 1};
         
-        if (pins == number_of_pins_in_frame)
-        {
-            ++m_roll_index;
-        }
+        return {m_rolls[roll_index] + m_rolls[roll_index + 1], 2};
     }
 
     bool is_spare(size_t roll_index) const
@@ -78,12 +77,7 @@ private:
 
     size_t strike_bonus(size_t roll_index) const
     {
-        return m_rolls[roll_index + 2] + m_rolls[roll_index + 3];
-    }
-
-    size_t frame_score(size_t roll_index) const 
-    {
-        return m_rolls[roll_index] + m_rolls[roll_index + 1];
+        return m_rolls[roll_index + 1] + m_rolls[roll_index + 2];
     }
 };
 
