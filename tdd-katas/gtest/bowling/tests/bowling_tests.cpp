@@ -26,29 +26,46 @@ private:
     size_t m_score {0};
 };
 
-TEST(BowlingGameTests, When_GameStarts_ScoreIsZero)
+class BowlingGameTests : public ::testing::Test
 {
-    BowlingGame game;
+protected:
+    BowlingGame game{};
+
+    BowlingGameTests()
+    {
+         // setup
+    }
+
+    // void SetUp() override
+    // {        
+    // }
+    
+    // void TearDown() override
+    // {        
+    // }
+
+    void roll_many(size_t roll, size_t pins)
+    {
+        for(size_t i = 0; i < roll; ++i)
+            game.roll(pins);
+    }
+};
+
+TEST_F(BowlingGameTests, When_GameStarts_ScoreIsZero)
+{
+    ASSERT_EQ(game.score(), 0);
+}
+
+TEST_F(BowlingGameTests, When_AllRollsInGutter_ScoreIsZero)
+{
+    roll_many(20, 0);
 
     ASSERT_EQ(game.score(), 0);
 }
 
-TEST(BowlingGameTests, When_AllRollsInGutter_ScoreIsZero)
+TEST_F(BowlingGameTests, When_AllRollsWithoutSpareOrStrike_ScoreIsSumOfPins)
 {
-    BowlingGame game;
-
-    for(int i = 0; i < 20; ++i)
-        game.roll(0);
-
-    ASSERT_EQ(game.score(), 0);
-}
-
-TEST(BowlingGameTests, When_AllRollsWithoutSpareOrStrike_ScoreIsSumOfPins)
-{
-    BowlingGame game;
-
-    for(int i = 0; i < 20; ++i)
-        game.roll(1);
+    roll_many(20, 1);
 
     ASSERT_EQ(game.score(), 20);
 }
