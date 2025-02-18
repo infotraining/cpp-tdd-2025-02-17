@@ -3,6 +3,8 @@
 Develop a recently-used-list class to hold strings 
 uniquely in Last-In-First-Out order.
 
+* A recently-used-list is initially empty.
+
 * The most recently added item is first, the least
    recently added item is last.
 
@@ -10,8 +12,6 @@ uniquely in Last-In-First-Out order.
 
 * Items in the list are unique, so duplicate insertions
   are moved rather than added.
-
-* A recently-used-list is initially empty.
 
 ## Optional extras
 

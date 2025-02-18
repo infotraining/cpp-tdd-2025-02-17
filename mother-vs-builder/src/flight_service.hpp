@@ -10,6 +10,12 @@ struct ReservationRequest
     Flight flight;
     Client client;
     Timestamp timestamp;
+    bool is_paid;
+
+    ReservationRequest(const Flight& flight, const Client& client, const Timestamp& timestamp, bool is_paid)
+        : flight{flight}, client{client}, timestamp{timestamp}, is_paid{false}
+    {
+    }
 };
 
 class FlightReservationService

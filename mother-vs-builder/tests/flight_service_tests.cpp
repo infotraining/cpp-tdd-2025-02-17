@@ -16,7 +16,7 @@ struct Mother
 
     static ReservationRequest create_reservation_request()
     {
-        return ReservationRequest{Flight{flight_no, 100.0}, client, timestamp};
+        return ReservationRequest(Flight{flight_no, 100.0}, client, timestamp, false);
     }
 };
 
@@ -26,7 +26,7 @@ class ReservationRequestBuilder
     constexpr static const char* client = "John Newman";
     constexpr static const char* timestamp = "2017/01/01 1:45am";
 
-    ReservationRequest reservation_request_{Flight{flight_no, 100.0}, client, timestamp};
+    ReservationRequest reservation_request_{Flight{flight_no, 100.0}, client, timestamp, false};
 
 public:
     ReservationRequestBuilder() = default;
