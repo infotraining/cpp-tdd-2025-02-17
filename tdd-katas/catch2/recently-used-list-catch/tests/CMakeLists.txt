@@ -23,11 +23,11 @@ if (NOT Catch2_FOUND)
   list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 endif()
 
-include(CTest)
+# include(CTest)
 include(Catch)
 
 add_executable(${PROJECT_TESTS} ${SRC_LIST} ${HEADERS_LIST})
-
+target_compile_features(${PROJECT_TESTS} PUBLIC cxx_std_20)
 target_link_libraries(${PROJECT_TESTS} PRIVATE Catch2::Catch2WithMain ${PROJECT_LIB})
 
 catch_discover_tests(${PROJECT_TESTS})
