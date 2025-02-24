@@ -235,8 +235,6 @@ private:
     }
 };
 
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename TSnake = class SnakeParam>
@@ -293,7 +291,7 @@ auto default_injector = [] {
     );
 };
 
-TEST_CASE("SnakeGame - rendering menu") 
+TEST_CASE("SnakeGame - rendering menu", "[SnakeGame]") 
 {
     auto injector = default_injector();
 
@@ -317,7 +315,7 @@ TEST_CASE("SnakeGame - rendering menu")
     }
 }
 
-TEST_CASE("SnakeGame - game loop")
+TEST_CASE("SnakeGame - game loop", "[SnakeGame]")
 {
     auto injector = default_injector();
 
@@ -345,7 +343,7 @@ TEST_CASE("SnakeGame - game loop")
     }
 }
 
-TEST_CASE("SnakeGame - game over")
+TEST_CASE("SnakeGame - game over", "[SnakeGame]")
 {
     auto injector = default_injector();
 
@@ -379,7 +377,7 @@ TEST_CASE("SnakeGame - game over")
     }
 }
 
-TEST_CASE("SnakeGame - pressing arrows")
+TEST_CASE("SnakeGame - pressing keys-arrows", "[SnakeGame]")
 {
     auto injector = default_injector();
 
@@ -422,7 +420,7 @@ TEST_CASE("SnakeGame - pressing arrows")
     }
 }
 
-TEST_CASE("SnakeGame - snake follows the last set direction")
+TEST_CASE("SnakeGame - snake follows the last set direction", "[SnakeGame]")
 {
     auto injector = boost::di::make_injector(
         default_injector()
@@ -465,7 +463,7 @@ TEST_CASE("SnakeGame - snake follows the last set direction")
     }
 }
 
-TEST_CASE("Snake - constructor with head coordinates and direction")
+TEST_CASE("Snake - constructor with head coordinates and direction", "[Snake]")
 {
     Board board{20, 10};
     Snake snake{board, Point{5, 5}, Direction::Up};
@@ -473,7 +471,7 @@ TEST_CASE("Snake - constructor with head coordinates and direction")
     REQUIRE(snake.segments() == std::vector<Point>{{5, 5}, {5, 6}});
 }
 
-TEST_CASE("Snake - constructed with point & direction")
+TEST_CASE("Snake - constructed with board, point & direction", "[Snake]")
 {
     Board board{20, 10};
 
@@ -500,12 +498,27 @@ TEST_CASE("Snake - constructed with point & direction")
 
 TEST_CASE("Snake - hitting the wall", "[Snake]")
 {
-    Board board{20, 10};
-    Snake snake{board, Point{10, 0}, Direction::Up};
-    CHECK(snake.is_alive());
+    Board board{40, 30};
 
-    snake.move(Direction::Up);
-    REQUIRE(snake.is_alive() == false);
+    const auto [head, direction] = GENERATE(
+        table<Point, Direction>(
+            {
+                {Point{20, 0}, Direction::Up},
+                {Point{0, 15}, Direction::Left},
+                {Point{20, 30}, Direction::Down},
+                {Point{40, 15}, Direction::Right},
+            }));
+
+    DYNAMIC_SECTION("Snake's head: " << head << " moving: " << Catch::StringMaker<Direction>::convert(direction))
+    {
+        Snake snake{board, head, direction};
+        CHECK(snake.is_alive());
+
+        snake.move(direction);
+
+        SECTION("snake is dead")
+        {
+            REQUIRE_FALSE(snake.is_alive());
+        }
+    }
 }
-
-
