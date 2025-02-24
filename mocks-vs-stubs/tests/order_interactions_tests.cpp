@@ -38,8 +38,8 @@ TEST_F(OrderInteractionsTests, FillingOrderRemovesInventoryIfEnoughInStock)
 {
     Order order{talisker, 50};
 
-    ON_CALL(warehouse_, has_inventory(talisker, 50)).WillByDefault(Return(true));
-    EXPECT_CALL(warehouse_, remove(talisker, 50)).Times(1);
+    ON_CALL(warehouse_, has_inventory(talisker, 50)).WillByDefault(Return(true)); // as STUB
+    EXPECT_CALL(warehouse_, remove(talisker, 50)).Times(1); // behaviour verification - as MOCK
 
     order.fill(warehouse_);
 }
@@ -60,8 +60,8 @@ TEST_F(OrderInteractionsTests, FillingOrderDoesNotRemoveInventoryIfNotEnoughInSt
 {
     Order order{talisker, 50};
 
-    ON_CALL(warehouse_, has_inventory(talisker, 50)).WillByDefault(Return(false));
-    EXPECT_CALL(warehouse_, remove(_, _)).Times(0);
+    ON_CALL(warehouse_, has_inventory(talisker, 50)).WillByDefault(Return(false)); // as STUB
+    EXPECT_CALL(warehouse_, remove(_, _)).Times(0); // behaviour verification // as MOCK
 
     order.fill(warehouse_);
 }
@@ -70,7 +70,7 @@ TEST_F(OrderInteractionsTests, OrderIsNotFilledIfNotEnoughInStock)
 {
     Order order{talisker, 50};
 
-    ON_CALL(warehouse_, has_inventory(talisker, 50)).WillByDefault(Return(false));
+    ON_CALL(warehouse_, has_inventory(talisker, 50)).WillByDefault(Return(false)); // as STUB
 
     order.fill(warehouse_);
 

@@ -13,7 +13,7 @@ public:
     virtual ~ISwitch() = default;
 };
 
-auto btn_number = [] {};
+//auto btn_number = [] {};
 
 class Button
 {
@@ -47,9 +47,9 @@ public:
 
 namespace HighPerfDI
 {
-    class SwitchProvider;
+    class SwitchParam;
 
-    template <typename SwitchType = class SwitchProvider>
+    template <typename SwitchType = class SwitchParam>
     class Button
     {
         int btn_number_;

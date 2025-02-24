@@ -45,7 +45,7 @@ namespace Legacy
 
 TEST(GMockDefaultValuesTests, ReturningDefaultValues)
 {
-    testing::NiceMock<MockInterface> mock;
+    ::testing::StrictMock<MockInterface> mock;
 
     ASSERT_EQ(0, mock.generate());
     ASSERT_EQ(""s, mock.get_name());
@@ -107,7 +107,8 @@ TEST_F(GMockDemoTests, VerificationHowManyTimesMethodIsCalled1)
 
     EXPECT_CALL(mock, get_name()).WillOnce(Return("adam"));
 
-    ASSERT_EQ(mock.get_name(), "adam");
+    mock.get_name();
+    //ASSERT_EQ(mock.get_name(), "adam");
     //ASSERT_EQ(mock.get_name(), ""); // error - called twice
 }
 
@@ -133,11 +134,13 @@ TEST_F(GMockDemoTests, ReturnDifferentValuesBasedOnArgument)
 {
     using namespace ::testing;
 
+    EXPECT_CALL(mock, get_value(0)).WillRepeatedly(Return("zero"));
     EXPECT_CALL(mock, get_value(Gt(0))).WillRepeatedly(Return("positive"));
     EXPECT_CALL(mock, get_value(Lt(0))).WillRepeatedly(Return("negative"));
 
     ASSERT_EQ(mock.get_value(10), "positive");
     ASSERT_EQ(mock.get_value(-1), "negative");   
+    ASSERT_EQ(mock.get_value(0), "zero"s);
 }
 
 TEST_F(GMockDemoTests, ExpectingOrderedCalls)
@@ -161,7 +164,7 @@ TEST_F(GMockDemoTests, ExpectingOrderedCalls)
     mock.save_value(key, name1 + " " + name2);
 }
 
-TEST_F(GMockDemoTests, SpyingOnParamtersInvokedInMock)
+TEST_F(GMockDemoTests, SpyingOnParametersInvokedInMock)
 {
     using namespace ::testing;
 

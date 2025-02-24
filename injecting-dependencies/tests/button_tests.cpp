@@ -5,6 +5,10 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+#include <boost/di.hpp>
+
+namespace di = boost::di;
+
 using namespace std;
 
 // create mock for ISwitch
@@ -15,15 +19,18 @@ public:
     MOCK_METHOD(void, off, (), (override));
 };
 
+auto default_test_injector = di::make_injector(
+    di::bind<ISwitch>().to<MockISwitch>()
+);
+
 TEST(Tests, WhenButtonIsClicked_SwitchIsOn)
 {
-    auto mock_switch = make_shared<MockISwitch>();
+    auto mock_switch = default_test_injector.create<std::shared_ptr<MockISwitch>>();
+    EXPECT_CALL(*mock_switch, on()).Times(1);
     
     // Arrange
-    Button btn{1, mock_switch};
+    Button btn = default_test_injector.create<Button>();
    
-    EXPECT_CALL(*mock_switch, on()).Times(1);
-
     // Act
     btn.click();
 }

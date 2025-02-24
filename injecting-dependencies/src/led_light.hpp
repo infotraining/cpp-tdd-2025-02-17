@@ -14,7 +14,7 @@ class LEDLight : public ILEDLight
 {
     int id_;
 public:
-    LEDLight(int id) : id_{id}
+    LEDLight(int btn_number_alt) : id_{btn_number_alt}
     {}
 
     void set_rgb(int r, int g, int b) override
