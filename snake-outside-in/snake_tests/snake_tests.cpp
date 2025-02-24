@@ -11,16 +11,123 @@
 using namespace std;
 using namespace std::literals;
 
-struct Snake
+struct Point
 {
-    bool operator==(const Snake&) const = default;
+    int x, y;
+
+    bool operator==(const Point&) const = default;
 };
+
+std::ostream& operator<<(std::ostream& os, const Point& pt)
+{
+    return os << "Point(" << pt.x << ", " << pt.y << ")";
+}
+
 
 struct Board 
 {
+    int width_, height_;
+public:
+    Board(int width = 20, int height = 10) : width_{width}, height_{height}
+    {}
+
+    int width() const
+    {
+        return width_;
+    }
+
+    int height() const
+    {
+        return height_;
+    }
+
     bool operator==(const Board&) const = default;
 };
 
+struct Snake
+{
+    Board& board_;
+    std::vector<Point> segments_;
+    Direction direction_;
+    bool is_alive_{true};
+public:
+    Snake(Board& board, Point head, Direction direction)
+        : board_{board}, direction_{direction}
+    {
+        segments_.push_back(head);
+        segments_.push_back(new_segment_from(head, opposite_direction(direction_)));
+    }
+
+    const std::vector<Point> segments() const
+    {
+        return segments_;
+    }
+
+    Direction direction() const
+    {
+        return direction_;
+    }
+
+    bool is_alive() const
+    {
+        return is_alive_;
+    }
+
+    void move(Direction direction)
+    {
+        auto new_head = new_segment_from(segments_.front(), direction);
+
+        if ( new_head.x < 0 
+                || new_head.x > board_.width() 
+                || new_head.y < 0 
+                || new_head.y > board_.height())
+                {
+                    is_alive_ = false;
+                }
+    }
+
+    bool operator==(const Snake&) const = default;
+private:
+
+    Point new_segment_from(Point old, Direction direction)
+    {
+        Point new_segment{};
+        switch (direction)
+        {
+        case Direction::Up:
+            new_segment = {old.x, old.y - 1};
+            break;
+        case Direction::Down:
+            new_segment = {old.x, old.y + 1};
+            break;
+        case Direction::Left:
+            new_segment = {old.x - 1, old.y};
+            break;
+        case Direction::Right:
+            new_segment = {old.x + 1, old.y};
+            break;
+        }
+
+        return new_segment;
+    }
+
+    Direction opposite_direction(Direction direction)
+    {
+        switch (direction)
+        {
+        case Direction::Up:
+            return Direction::Down;
+        case Direction::Down:
+            return Direction::Up;
+        case Direction::Left:
+            return Direction::Right;
+        case Direction::Right:
+            return Direction::Left;
+        default:
+            throw std::runtime_error("Invalid direction");
+        }
+    }
+};
 
 class TerminalParam;
 class SnakeParam;
@@ -33,6 +140,8 @@ class SnakeGame
     TTerminal& terminal_;
     TSnake& snake_;
     GameState game_state_{GameState::Menu};
+    std::optional<Key> key_pressed_ = std::nullopt;
+    Direction direction_;
 
 public:
     explicit SnakeGame(TTerminal& terminal, TSnake& snake) : terminal_{terminal}, snake_{snake}
@@ -42,12 +151,12 @@ public:
     {
         while(true)
         {
-            std::optional<Key> key_pressed = terminal_.read_key();
+            key_pressed_ = terminal_.read_key();
 
-            if (key_pressed == Key::Q)
+            if (key_pressed_ == Key::Q)
                     return;
 
-            if (key_pressed == Key::P)
+            if (key_pressed_ == Key::P)
                 game_state_ = GameState::Playing;
 
             update();
@@ -58,12 +167,16 @@ public:
 private:
     void update()
     {
-        if (game_state_ == GameState::Playing)
+        if (game_state_ == GameState::Playing)        
         {
+            direction_ = current_direction(key_pressed_);
+
+            snake_.move(direction_);
+            
             if (!snake_.is_alive())
             {
                 game_state_ = GameState::GameOver;            
-            }
+            }        
         }
     }
 
@@ -81,6 +194,26 @@ private:
                 render_game_over();
                 break;
         }
+    }
+
+    Direction current_direction(std::optional<Key> key_pressed) const
+    {
+        if (key_pressed_.has_value())
+        {
+            switch (*key_pressed_)
+            {
+            case Key::ArrowDown:
+                return Direction::Down;
+            case Key::ArrowUp:
+                return Direction::Up;
+            case Key::ArrowLeft:
+                return Direction::Left;
+            case Key::ArrowRight:
+                return Direction::Right;
+            }
+        }
+
+        return direction_;
     }
 
     void render_menu()
@@ -134,12 +267,14 @@ template <typename TSnake>
 struct MockSnake
 {
     MAKE_MOCK0(is_alive, auto () -> bool);
+    MAKE_MOCK1(move,     auto(Direction) -> void);
 };
 
 [[no_discard]] auto set_default_expectations(MockSnake& snake)
 {
     return std::tuple{
         NAMED_ALLOW_CALL(snake, is_alive()).RETURN(true),
+        NAMED_ALLOW_CALL(snake, move(ANY(Direction)))
     };
 }
 
@@ -228,6 +363,7 @@ TEST_CASE("SnakeGame - game over")
     {
         using MockSnakeType = decltype(injector.create<MockSnake>());
         auto mock_snake = injector.create<std::shared_ptr<MockSnakeType>>();
+        auto mock_snake_expectations = set_default_expectations(*mock_snake);
 
         REQUIRE_CALL(*mock_snake, is_alive()).RETURN(false);
         REQUIRE_CALL(*mock_snake, is_alive()).RETURN(true);
@@ -242,3 +378,134 @@ TEST_CASE("SnakeGame - game over")
         }
     }
 }
+
+TEST_CASE("SnakeGame - pressing arrows")
+{
+    auto injector = default_injector();
+
+    using MockTerminalType = decltype(injector.create<MockTerminal>());
+    auto mock_terminal = injector.create<std::shared_ptr<MockTerminalType>>();
+    auto mock_terminal_expectations = set_default_expectations(*mock_terminal);
+
+    using MockSnakeType = decltype(injector.create<MockSnake>());
+    auto mock_snake = injector.create<std::shared_ptr<MockSnakeType>>();
+    auto mock_snake_expectations = set_default_expectations(*mock_snake);
+
+    REQUIRE_CALL(*mock_terminal, read_key()).RETURN(Key::Q);
+
+    // clang-format off
+    auto [key, expected_direction] = GENERATE(
+        table<Key, Direction>(
+            {
+                {Key::ArrowUp, Direction::Up},
+                {Key::ArrowDown, Direction::Down},
+                {Key::ArrowLeft, Direction::Left},
+                {Key::ArrowRight, Direction::Right}
+            }
+        )
+    );
+    // clang-format on
+
+    DYNAMIC_SECTION("when " << Catch::StringMaker<Key>::convert(key) << " is pressed")
+    {
+        trompeloeil::sequence seq;
+        REQUIRE_CALL(*mock_terminal, read_key()).RETURN(key).IN_SEQUENCE(seq);
+        REQUIRE_CALL(*mock_terminal, read_key()).RETURN(Key::P);
+
+        SnakeGame game = injector.create<SnakeGame>();
+
+        DYNAMIC_SECTION("snake moves " << Catch::StringMaker<Direction>::convert(expected_direction))
+        {
+            REQUIRE_CALL(*mock_snake, move(expected_direction)).IN_SEQUENCE(seq);
+            game.run();
+        }
+    }
+}
+
+TEST_CASE("SnakeGame - snake follows the last set direction")
+{
+    auto injector = boost::di::make_injector(
+        default_injector()
+    );
+
+    using MockTerminalType = decltype(injector.create<MockTerminal>());
+    auto mock_terminal = injector.create<std::shared_ptr<MockTerminalType>>();
+    auto expectations = set_default_expectations(*mock_terminal);
+    
+    using MockSnakeType = decltype(injector.create<MockSnake>());
+    auto mock_snake = injector.create<std::shared_ptr<MockSnakeType>>();
+    auto snake_expectations = set_default_expectations(*mock_snake);
+
+    REQUIRE_CALL(*mock_terminal, read_key()).RETURN(Key::Q);
+    REQUIRE_CALL(*mock_terminal, read_key()).RETURN(std::nullopt);
+    REQUIRE_CALL(*mock_terminal, read_key()).RETURN(std::nullopt);
+
+    // clang-format off
+    auto [key, expected_direction] = GENERATE(
+        table<Key, Direction>(
+            {
+                {Key::ArrowUp, Direction::Up},
+                {Key::ArrowDown, Direction::Down},
+                {Key::ArrowLeft, Direction::Left},
+                {Key::ArrowRight, Direction::Right}
+            }
+        )
+    );
+    // clang-format on
+
+    DYNAMIC_SECTION(Catch::StringMaker<Key>::convert(key) << " is pressed")
+    {
+        REQUIRE_CALL(*mock_terminal, read_key()).RETURN(key);
+        REQUIRE_CALL(*mock_terminal, read_key()).RETURN(Key::P);
+
+        REQUIRE_CALL(*mock_snake, move(expected_direction)).TIMES(3);
+
+        SnakeGame game = injector.create<SnakeGame>();
+        game.run();
+    }
+}
+
+TEST_CASE("Snake - constructor with head coordinates and direction")
+{
+    Board board{20, 10};
+    Snake snake{board, Point{5, 5}, Direction::Up};
+
+    REQUIRE(snake.segments() == std::vector<Point>{{5, 5}, {5, 6}});
+}
+
+TEST_CASE("Snake - constructed with point & direction")
+{
+    Board board{20, 10};
+
+    auto [direction, expected_segments] = GENERATE(
+        table<Direction, std::vector<Point>>(
+            {{Direction::Up, {Point{5, 5}, Point{5, 6}}},
+                {Direction::Left, {Point{5, 5}, Point{6, 5}}},
+                {Direction::Right, {Point{5, 5}, Point{4, 5}}},
+                {Direction::Down, {Point{5, 5}, Point{5, 4}}}}));
+
+    Snake snake{board, Point{5, 5}, direction};
+
+    SECTION("has two segments - head & tail")
+    {
+        REQUIRE(snake.direction() == direction);
+        REQUIRE(snake.segments() == expected_segments);
+    }
+
+    SECTION("is alive")
+    {
+        REQUIRE(snake.is_alive() == true);
+    }
+}
+
+TEST_CASE("Snake - hitting the wall", "[Snake]")
+{
+    Board board{20, 10};
+    Snake snake{board, Point{10, 0}, Direction::Up};
+    CHECK(snake.is_alive());
+
+    snake.move(Direction::Up);
+    REQUIRE(snake.is_alive() == false);
+}
+
+
