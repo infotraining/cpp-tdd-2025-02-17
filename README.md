@@ -1,5 +1,11 @@
 # Szkolenie - Test-Driven Development w C++ #
 
+## Video
+
+* https://infotrainingszkolenia-my.sharepoint.com/:v:/g/personal/aleksandra_piekos_infotraining_pl/ERhTo8HDchRCgnWEyNXaRpUBBn3Bv290MHYIePJZ2ka70Q?e=EsIKKL
+* https://infotrainingszkolenia-my.sharepoint.com/:v:/g/personal/aleksandra_piekos_infotraining_pl/EXCRVCfKzBtCmws3XAos4dcBwTLngsF48LT5iGu7HkJPLw?e=xFRaJd
+* https://infotrainingszkolenia-my.sharepoint.com/:v:/g/personal/aleksandra_piekos_infotraining_pl/EWkp5osgWWhMvwPfzYi_y0UBt-GuhS76WXVDuHWxXnGBNQ?e=dTayQk
+
 ## Ankieta
 
 * https://forms.gle/ZJxf3zP1fHfrZcSW9
