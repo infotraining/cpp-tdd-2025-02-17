@@ -2,9 +2,10 @@
 
 ## Video
 
-* https://infotrainingszkolenia-my.sharepoint.com/:v:/g/personal/aleksandra_piekos_infotraining_pl/ERhTo8HDchRCgnWEyNXaRpUBBn3Bv290MHYIePJZ2ka70Q?e=EsIKKL
-* https://infotrainingszkolenia-my.sharepoint.com/:v:/g/personal/aleksandra_piekos_infotraining_pl/EXCRVCfKzBtCmws3XAos4dcBwTLngsF48LT5iGu7HkJPLw?e=xFRaJd
-* https://infotrainingszkolenia-my.sharepoint.com/:v:/g/personal/aleksandra_piekos_infotraining_pl/EWkp5osgWWhMvwPfzYi_y0UBt-GuhS76WXVDuHWxXnGBNQ?e=dTayQk
+* https://infotrainingszkolenia-my.sharepoint.com/:v:/g/personal/aleksandra_piekos_infotraining_pl/EWkegVudP_FGps9IGyxL4msBDrtFunw7jUvSpflglEQvYQ?e=Yd9Dzv
+* https://infotrainingszkolenia-my.sharepoint.com/:v:/g/personal/aleksandra_piekos_infotraining_pl/EWkp5osgWWhMvwPfzYi_y0UBt-GuhS76WXVDuHWxXnGBNQ?e=GRSEoH
+* https://infotrainingszkolenia-my.sharepoint.com/:v:/g/personal/aleksandra_piekos_infotraining_pl/EXCRVCfKzBtCmws3XAos4dcBwTLngsF48LT5iGu7HkJPLw?e=dANpbd
+* https://infotrainingszkolenia-my.sharepoint.com/:v:/g/personal/aleksandra_piekos_infotraining_pl/ERhTo8HDchRCgnWEyNXaRpUBBn3Bv290MHYIePJZ2ka70Q?e=db1vEo
 
 ## Ankieta
 
