@@ -11,230 +11,6 @@
 using namespace std;
 using namespace std::literals;
 
-struct Point
-{
-    int x, y;
-
-    bool operator==(const Point&) const = default;
-};
-
-std::ostream& operator<<(std::ostream& os, const Point& pt)
-{
-    return os << "Point(" << pt.x << ", " << pt.y << ")";
-}
-
-
-struct Board 
-{
-    int width_, height_;
-public:
-    Board(int width = 20, int height = 10) : width_{width}, height_{height}
-    {}
-
-    int width() const
-    {
-        return width_;
-    }
-
-    int height() const
-    {
-        return height_;
-    }
-
-    bool operator==(const Board&) const = default;
-};
-
-struct Snake
-{
-    Board& board_;
-    std::vector<Point> segments_;
-    Direction direction_;
-    bool is_alive_{true};
-public:
-    Snake(Board& board, Point head, Direction direction)
-        : board_{board}, direction_{direction}
-    {
-        segments_.push_back(head);
-        segments_.push_back(new_segment_from(head, opposite_direction(direction_)));
-    }
-
-    const std::vector<Point> segments() const
-    {
-        return segments_;
-    }
-
-    Direction direction() const
-    {
-        return direction_;
-    }
-
-    bool is_alive() const
-    {
-        return is_alive_;
-    }
-
-    void move(Direction direction)
-    {
-        auto new_head = new_segment_from(segments_.front(), direction);
-
-        if ( new_head.x < 0 
-                || new_head.x > board_.width() 
-                || new_head.y < 0 
-                || new_head.y > board_.height())
-                {
-                    is_alive_ = false;
-                }
-    }
-
-    bool operator==(const Snake&) const = default;
-private:
-
-    Point new_segment_from(Point old, Direction direction)
-    {
-        Point new_segment{};
-        switch (direction)
-        {
-        case Direction::Up:
-            new_segment = {old.x, old.y - 1};
-            break;
-        case Direction::Down:
-            new_segment = {old.x, old.y + 1};
-            break;
-        case Direction::Left:
-            new_segment = {old.x - 1, old.y};
-            break;
-        case Direction::Right:
-            new_segment = {old.x + 1, old.y};
-            break;
-        }
-
-        return new_segment;
-    }
-
-    Direction opposite_direction(Direction direction)
-    {
-        switch (direction)
-        {
-        case Direction::Up:
-            return Direction::Down;
-        case Direction::Down:
-            return Direction::Up;
-        case Direction::Left:
-            return Direction::Right;
-        case Direction::Right:
-            return Direction::Left;
-        default:
-            throw std::runtime_error("Invalid direction");
-        }
-    }
-};
-
-class TerminalParam;
-class SnakeParam;
-
-template <typename TTerminal = class TerminalParam, typename TSnake = SnakeParam>
-class SnakeGame
-{
-    enum class GameState { Menu, Playing, GameOver };
-
-    TTerminal& terminal_;
-    TSnake& snake_;
-    GameState game_state_{GameState::Menu};
-    std::optional<Key> key_pressed_ = std::nullopt;
-    Direction direction_;
-
-public:
-    explicit SnakeGame(TTerminal& terminal, TSnake& snake) : terminal_{terminal}, snake_{snake}
-    {}
-    
-    void run()
-    {
-        while(true)
-        {
-            key_pressed_ = terminal_.read_key();
-
-            if (key_pressed_ == Key::Q)
-                    return;
-
-            if (key_pressed_ == Key::P)
-                game_state_ = GameState::Playing;
-
-            update();
-
-            render();
-        }
-    }
-private:
-    void update()
-    {
-        if (game_state_ == GameState::Playing)        
-        {
-            direction_ = current_direction(key_pressed_);
-
-            snake_.move(direction_);
-            
-            if (!snake_.is_alive())
-            {
-                game_state_ = GameState::GameOver;            
-            }        
-        }
-    }
-
-    void render()
-    {
-        switch(game_state_)
-        {
-            case GameState::Menu:
-                render_menu();
-                break;
-            case GameState::Playing:
-                render_game();
-                break;
-            case GameState::GameOver:
-                render_game_over();
-                break;
-        }
-    }
-
-    Direction current_direction(std::optional<Key> key_pressed) const
-    {
-        if (key_pressed_.has_value())
-        {
-            switch (*key_pressed_)
-            {
-            case Key::ArrowDown:
-                return Direction::Down;
-            case Key::ArrowUp:
-                return Direction::Up;
-            case Key::ArrowLeft:
-                return Direction::Left;
-            case Key::ArrowRight:
-                return Direction::Right;
-            }
-        }
-
-        return direction_;
-    }
-
-    void render_menu()
-    {
-        terminal_.render_text({"~~Snake~~", "Play game [P]", "Quit [Q]"});
-    }
-
-    void render_game()
-    {
-        terminal_.clear();
-        terminal_.render_snake(snake_);
-        terminal_.render_board(Board{});
-        terminal_.flush();
-    }
-
-    void render_game_over()
-    {
-        terminal_.render_text({"Game Over!!!"});
-    }
-};
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename TSnake = class SnakeParam>
@@ -297,6 +73,7 @@ TEST_CASE("SnakeGame - rendering menu", "[SnakeGame]")
 
     using MockTerminalType = decltype(injector.create<MockTerminal>());
     auto mock_terminal = injector.create<std::shared_ptr<MockTerminalType>>();
+    auto mock_terminal_expectations = set_default_expectations(*mock_terminal);
 
     std::vector<std::string> menu_items = {"~~Snake~~", "Play game [P]", "Quit [Q]"};
 
@@ -334,8 +111,8 @@ TEST_CASE("SnakeGame - game loop", "[SnakeGame]")
     {
         trompeloeil::sequence seq;
         REQUIRE_CALL(*mock_terminal, clear()).IN_SEQUENCE(seq);
-        REQUIRE_CALL(*mock_terminal, render_snake(ANY(MockSnakeType))).IN_SEQUENCE(seq);
         REQUIRE_CALL(*mock_terminal, render_board(ANY(Board))).IN_SEQUENCE(seq);
+        REQUIRE_CALL(*mock_terminal, render_snake(ANY(MockSnakeType))).IN_SEQUENCE(seq);
         REQUIRE_CALL(*mock_terminal, flush()).IN_SEQUENCE(seq);
 
         SnakeGame game = injector.create<SnakeGame>();
@@ -463,14 +240,6 @@ TEST_CASE("SnakeGame - snake follows the last set direction", "[SnakeGame]")
     }
 }
 
-TEST_CASE("Snake - constructor with head coordinates and direction", "[Snake]")
-{
-    Board board{20, 10};
-    Snake snake{board, Point{5, 5}, Direction::Up};
-
-    REQUIRE(snake.segments() == std::vector<Point>{{5, 5}, {5, 6}});
-}
-
 TEST_CASE("Snake - constructed with board, point & direction", "[Snake]")
 {
     Board board{20, 10};
@@ -496,7 +265,99 @@ TEST_CASE("Snake - constructed with board, point & direction", "[Snake]")
     }
 }
 
-TEST_CASE("Snake - hitting the wall", "[Snake]")
+TEST_CASE("Snake - constructed with board")
+{
+    Board board{20, 10};
+ 
+    Snake snake{board};
+
+    SECTION("has head in the middle of the board")
+    {
+        REQUIRE(snake.head() == Point{10, 5});
+    }
+
+    SECTION("is directed up")
+    {
+        REQUIRE(snake.direction() == Direction::Up);
+    }
+    
+    SECTION("is alive")
+    {
+        REQUIRE(snake.is_alive() == true);
+    }
+}
+
+TEST_CASE("Snake - moving on the board", "[Snake]")
+{
+    Board board{20, 10};
+    Point head{5, 5};
+    
+    auto [snake_direction, move_direction, expected_segments] = GENERATE(
+        table<Direction, Direction, std::vector<Point>>(
+            {
+                { Direction::Up, Direction::Up, { Point{5, 4}, Point{5, 5} } },                
+                { Direction::Up, Direction::Left, { Point{4, 5}, Point{5, 5} } },
+                { Direction::Up, Direction::Right, { Point{6, 5}, Point{5, 5} } },
+                { Direction::Down, Direction::Down, { Point{5, 6}, Point{5, 5} } },
+                { Direction::Down, Direction::Left, { Point{4, 5}, Point{5, 5} } },
+                { Direction::Down, Direction::Right, { Point{6, 5}, Point{5, 5} } },
+                { Direction::Left, Direction::Up, { Point{5, 4}, Point{5, 5} } },
+                { Direction::Left, Direction::Down, { Point{5, 6}, Point{5, 5} } },
+                { Direction::Left, Direction::Left, { Point{4, 5}, Point{5, 5} } },
+                { Direction::Right, Direction::Up, { Point{5, 4}, Point{5, 5} } },
+                { Direction::Right, Direction::Down, { Point{5, 6}, Point{5, 5} } },
+                { Direction::Right, Direction::Right, { Point{6, 5}, Point{5, 5} } }
+                
+            }
+        )
+    );
+            
+    DYNAMIC_SECTION("Snake's head: " << head 
+        << ", directed: " <<  Catch::StringMaker<Direction>::convert(snake_direction)
+        << ", moving: " << Catch::StringMaker<Direction>::convert(move_direction))
+    {
+        
+        Snake snake{board, head, snake_direction};
+        snake.move(move_direction);
+
+        REQUIRE(snake.segments() == expected_segments);
+    }
+}
+
+TEST_CASE("Snake - moving backward is ignored", "[Snake]")
+{
+    Board board{20, 10};
+
+    auto [snake_direction, move_direction, expected_segments] = GENERATE(
+        table<Direction, Direction, std::vector<Point>>(
+            {
+                { Direction::Up, Direction::Down, { Point{5, 4}, Point{5, 5} } },
+                { Direction::Down, Direction::Up, { Point{5, 6}, Point{5, 5} } },
+                { Direction::Left, Direction::Right, { Point{4, 5}, Point{5, 5} } },
+                { Direction::Right, Direction::Left, { Point{6, 5}, Point{5, 5} } }
+            }
+        )
+    );
+
+    DYNAMIC_SECTION("Snake directed: " << Catch::StringMaker<Direction>::convert(snake_direction)
+        << ", moving: " << Catch::StringMaker<Direction>::convert(move_direction))
+    {
+        Snake snake{board, Point{5, 5}, snake_direction};
+        snake.move(move_direction);
+
+        SECTION("snake moves in the previously set direction")
+        {
+            REQUIRE(snake.segments() == expected_segments);
+        }
+
+        SECTION("direction is not changed")
+        {
+            REQUIRE(snake.direction() == snake_direction);
+        }
+    }
+}
+
+TEST_CASE("Snake - hitting the wall", "[Snake][Board]")
 {
     Board board{40, 30};
 
@@ -521,4 +382,68 @@ TEST_CASE("Snake - hitting the wall", "[Snake]")
             REQUIRE_FALSE(snake.is_alive());
         }
     }
+}
+
+TEST_CASE("Snake - eating itself", "[Snake]")
+{
+    Board board{40, 30};
+
+    Snake snake{board, {Point{20, 15}, Point{20, 16}, Point{20, 17}, Point{21, 17}, Point{21, 16}, Point{21, 15}}, Direction::Up};
+
+    snake.move(Direction::Right);
+
+    SECTION("snake is dead")
+    {
+        REQUIRE_FALSE(snake.is_alive());
+    }
+}
+
+TEST_CASE("Board - constructed with apples count")
+{
+    auto stub_rnd = [seed = 0](int min, int max) mutable {
+        auto value = ++seed;
+        return value;
+    };
+
+    Board board{10, 20, 3, stub_rnd};
+
+    SECTION("has apples with randomly assigned coordinates")
+    {
+        REQUIRE(board.apples() == std::vector{Point{1, 2}, Point{3, 4}, Point{5, 6}});
+    }
+}
+
+TEST_CASE("Snake - eating apples from the board")
+{
+    auto stub_rnd =  [seed = 20](int min, int max) mutable {
+        return seed--;
+    };
+
+    Board board{40, 40, 1, stub_rnd};
+    Point apple{20, 19};
+    CHECK(board.apples() == std::vector{apple});
+
+    Snake snake{board};
+    CHECK(snake.head() == Point{20, 20});
+    CHECK(snake.direction() == Direction::Up);
+
+    SECTION("when snake eats apple")
+    {
+        snake.move(Direction::Up);
+        
+        SECTION("snake grows by one segment")
+        {
+            REQUIRE(snake.segments() == std::vector{Point{20, 19}, Point{20, 20}, Point{20, 21}});
+        }
+        
+        SECTION("apple is removed from the board")
+        {
+            REQUIRE_FALSE(board.has_apple(apple));
+        }
+
+        SECTION("two new apples are randomly added to the board")
+        {
+            REQUIRE(board.apples() == std::vector{Point{18, 17}, Point{16, 15}});
+        }
+    }    
 }
